@@ -1,0 +1,46 @@
+{
+  "manifest_version": 2,
+  "name": "Scatter",
+  "description": "Extension connector for Scatter Embed Wallet",
+  "version": "1.0.0",
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+  "browser_action": {
+    "default_icon": "icon.png"
+  },
+  "permissions": [
+    "storage",
+    "unlimitedStorage",
+    "http://*/*",
+    "https://*/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "http://localhost:8081/*",
+        "https://embed.get-scatter.com/*"
+      ],
+      "js": ["wallet_content.js"],
+      "run_at": "document_end"
+    },
+    {
+      "matches": [
+        "*://*/*"
+      ],
+      "exclude_matches":[
+        "http://localhost:8081/*",
+        "https://embed.get-scatter.com/*"
+      ],
+      "js": ["app_content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    "wallet_inject.js",
+    "app_inject.js"
+  ],
+  "background":{
+    "scripts":[
+      "background.js"
+    ]
+  }
+}
