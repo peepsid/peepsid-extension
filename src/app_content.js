@@ -8,14 +8,18 @@ let isReady = false;
 class Content {
 
 	constructor(){
+		this.setup();
+	}
+
+	async setup(){
 		// Only injecting into websites if the wallet is unlocked.
 		LocalStream.send({type:'unlocked'}).then(unlocked => {
 			if(!unlocked) return;
 			this.setupEncryptedStream();
 			this.injectInteractionScript();
 		})
-	}
 
+	}
 
 	setupEncryptedStream(){
 		stream = new EncryptedStream('scatter', IdGenerator.text(256));

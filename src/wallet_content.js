@@ -20,6 +20,13 @@ class Content {
 	}
 
 	async injectInteractionScript(){
+		if(location.href.indexOf('#/popout') === -1) {
+			const bg_port = chrome.runtime.connect({name: "wallet"});
+			bg_port.onMessage.addListener(async (msg, sender, respond) => {
+				stream.send({type: 'socket', payload: msg}, 'injected')
+			});
+		}
+
 
 		LocalStream.send({type:'embedder'}).then(verified => {
 			if(!verified) return;

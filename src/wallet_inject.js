@@ -7,8 +7,13 @@ class Inject {
 	constructor(){
 		const stream = new EncryptedStream('injected', IdGenerator.text(64));
 
-		stream.listenWith(data => {
+		stream.listenWith(async data => {
 			if(data.type === 'synced' || data.type === 'sync') return;
+			if(data.type === 'socket') {
+				const result = await window.wallet.socketResponse({type:'ext_api', request:data.payload});
+				stream.send({type:'apiResponse', result}, 'scatter')
+				return result;
+			}
 			resolvers[data.id].resolve(data.result);
 			delete resolvers[data.id];
 		});
@@ -20,6 +25,11 @@ class Inject {
 			if (key === 'then') {
 				return (prop ? target[prop] : target).then.bind(target);
 			}
+
+			if(key === 'socketResponse'){
+				return (prop ? target[prop] : target)[key];
+			}
+
 			return (...params) => new Promise(async resolve => {
 				const id = IdGenerator.text(24);
 				resolvers[id] = {prop, key, resolve};
@@ -44,10 +54,6 @@ class Inject {
 				if(['storage', 'utility', 'sockets'].includes(key)) return target[key];
 				return proxyGet(null, target, key);
 			},
-			set (target, key, value) {
-				console.log('set', target, key, value);
-				return true
-			}
 		});
 
 	}

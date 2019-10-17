@@ -17,7 +17,8 @@
     {
       "matches": [
         "http://localhost:8081/*",
-        "https://embed.get-scatter.com/*"
+        "https://embed.get-scatter.com/*",
+        "https://bridge.get-scatter.com/*"
       ],
       "js": ["wallet_content.js"],
       "run_at": "document_end"
@@ -28,7 +29,8 @@
       ],
       "exclude_matches":[
         "http://localhost:8081/*",
-        "https://embed.get-scatter.com/*"
+        "https://embed.get-scatter.com/*",
+        "https://bridge.get-scatter.com/*"
       ],
       "js": ["app_content.js"],
       "run_at": "document_end"

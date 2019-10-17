@@ -7,20 +7,15 @@ const embedder = require('./services/embedder');
 const windows = require('./services/windows');
 const PseudoSockets = require('./services/sockets');
 
-const Scatter = require('@walletpack/core/models/Scatter').default;
-const ApiService = require('@walletpack/core/services/apis/ApiService').default;
-const IdGenerator = require('@walletpack/core/util/IdGenerator').default;
-const StoreService = require('@walletpack/core/services/utility/StoreService').default;
-const EventService = require('@walletpack/core/services/utility/EventService').default;
-const AppsService = require('@walletpack/core/services/apps/AppsService').default;
-const WalletPack = require('@walletpack/core').default;
-
 wallet.setStorage(storage);
 wallet.init();
 
 let openTab = null;
-chrome.browserAction.onClicked.addListener(function(tab) {
-	// chrome.runtime.sendMessage({tab: tab, message: "Button was clicked"});
+let forwardApiRequest = null;
+
+chrome.browserAction.onClicked.addListener(tab => {
+	forwardApiRequest = null;
+
 	if(openTab !== null) {
 		chrome.tabs.remove(openTab);
 		openTab = null;
@@ -168,7 +163,30 @@ export default class Background {
 
 	// Watches the internal messaging system ( LocalStream )
 	setupInternalMessaging(){
-		this.initInternalWallet();
+
+		chrome.runtime.onConnect.addListener(wallet_port => {
+			if(wallet_port.name !== 'wallet') return;
+			openTab = wallet_port.sender.tab.id;
+
+			let resolvers = {};
+
+			forwardApiRequest = x => {
+				return new Promise(resolve => {
+					resolvers[x.id] = resolve;
+					wallet_port.postMessage(x);
+				});
+
+			};
+
+			console.log('connected to port', wallet_port);
+			wallet_port.onMessage.addListener(msg => {
+				console.log('got bg port msg', msg);
+				resolvers[msg.id](msg);
+				delete resolvers[msg.id];
+			});
+		});
+
+		let apiResulters = {};
 
 		LocalStream.watch(async (request, sendResponse) => {
 			console.log('request', request);
@@ -179,7 +197,15 @@ export default class Background {
 			}
 
 			if(request.type === 'api'){
-				sendResponse(await Background.handleApiRequest(request.payload));
+				apiResulters[request.payload.id] = sendResponse;
+				Background.handleApiRequest(request.payload);
+				return true;
+			}
+
+			if(request.type === 'apiResponse'){
+				console.log('got api response', request, apiResulters);
+				apiResulters[request.result.id](request.result);
+				// sendResponse(await Background.handleApiRequest(request.payload));
 				return true;
 			}
 
@@ -189,6 +215,10 @@ export default class Background {
 			}
 
 			if(request.type === 'embedder') {
+
+				const activeTab = await new Promise(r => chrome.tabs.getCurrent(tab => r(tab)));
+				console.log('activeTab', activeTab);
+
 				sendResponse(await embedder.checkEmbed());
 				return true;
 			}
@@ -203,76 +233,14 @@ export default class Background {
 		})
 	}
 
-	initInternalWallet(){
-		const noop = () => true;
-		WalletPack.initialize(
-			{
-				blockchains:{
-					EOSIO:'eos',
-					ETH:'eth',
-					TRX:'trx',
-					BTC:'btc',
-				},
-				plugins:[
-					require('@walletpack/eosio').default,
-					require('@walletpack/ethereum').default,
-					require('@walletpack/tron').default,
-					require('@walletpack/bitcoin').default,
-				]
-			},
-			// Store being injected later
-			{},
-			{
-				getSalt:injectable.getSalt,
-				get:noop,
-				set:noop,
-				clear:noop,
-			},
-			{
-				getVersion:noop,
-				pushNotification:noop,
-			},
-			// event listener
-			async (type, data) => {
-				if(type === 'popout') {
-					// const popup =  new Popup(PopupDisplayTypes.POP_OUT, new PopupData(data.type, data));
-					const popup =  {
-						id:data.id,
-						displayType:'popout',
-						data:{
-							type:data.type,
-							props:data,
-						},
-						internal:false,
-					};
-					popup.data.props.appData = AppsService.getAppDataFromServer(popup.data.props.payload.origin);
-					return await injectable.utility.openPopOut(popup);
-				}
-			},
-			{
-				signer:async (network, publicKey, payload, arbitrary = false, isHash = false) => {
-					return injectable.sign(network, publicKey, payload, arbitrary, isHash);
-				},
-			}
-		);
-
-		StoreService.get = () => ({
-			state:{
-				scatter:injectable.unlocked() ? Scatter.fromJson(injectable.storage.getWalletData()) : null,
-			},
-			dispatch:(key, data) => {
-				if(key === 'setScatter'){
-					return injectable.storage.setWalletData(data)
-				}
-			}
-		});
-	}
-
 	static async handleApiRequest(request){
 		if(!await injectable.unlocked()) return null;
-		const result = await ApiService.handler(Object.assign(request, {plugin:request.payload.origin}));
-		console.log('api request/result', request, result);
-		return result;
+
+		if(forwardApiRequest){
+			return forwardApiRequest(request)
+		}
+
+		return null;
 	}
 
 }
