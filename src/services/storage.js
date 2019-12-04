@@ -10,8 +10,29 @@ const stores = {
 	clear:() => new Promise(r => apis.storage.local.clear(() => r(true))),
 };
 
-const getUIType = () => stores.get('ui_type');
-const setUIType = type => stores.set('ui_type', type);
+const getGeneralSetting = (key) => {
+	const saved = stores.get(key);
+	if(saved === undefined) return null;
+	return saved;
+}
+const setGeneralSetting = (key, val) => stores.set(key, val);
+
+const getLanguage = () => {
+	const saved = stores.get('language');
+	if(saved === undefined) return null;
+	return saved;
+}
+const setLanguage = lang => stores.set('language', lang);
+
+const getSimpleMode = () => {
+	const saved = stores.get('simple_mode');
+	if(saved === undefined){
+		return process.env.SIMPLE_BY_DEFAULT || false;
+	}
+	return saved;
+};
+
+const setSimpleMode = isSimpleMode => stores.set('simple_mode', isSimpleMode);
 
 const getScatter = () => stores.get('scatter');
 const setScatter = (scatter) => stores.set('scatter', scatter);
@@ -51,7 +72,6 @@ const setTranslation =  async (translation) => {
 
 const getHistory = async () => {
 	let history = await stores.get('history');
-	console.log('history', history);
 	if(!history) return [];
 	history = AES.decrypt(history, getSeed());
 	return history;
@@ -105,8 +125,12 @@ const reencryptOptionals = async (oldseed, newseed) => {
 
 
 module.exports = {
-	getUIType,
-	setUIType,
+	getGeneralSetting,
+	setGeneralSetting,
+	getSimpleMode,
+	setSimpleMode,
+	getLanguage,
+	setLanguage,
 
 	getScatter,
 	setScatter,

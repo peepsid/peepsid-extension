@@ -28,14 +28,17 @@ class Content {
 		}
 
 
-		LocalStream.send({type:'embedder'}).then(verified => {
-			if(!verified) return;
+		// TODO: This won't actually do what it's supposed to
+		// since the servers will push back files from a different place each time,
+
+		// LocalStream.send({type:'embedder'}).then(verified => {
+		// 	if(!verified) return;
 
 			let script = document.createElement('script');
 			script.src = chrome.extension.getURL('wallet_inject.js');
 			(document.head||document.documentElement).appendChild(script);
 			script.onload = () => script.remove();
-		})
+		// })
 
 	}
 

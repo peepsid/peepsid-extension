@@ -14,6 +14,7 @@ class Inject {
 				stream.send({type:'apiResponse', result}, 'scatter')
 				return result;
 			}
+			if(!resolvers[data.id]) return;
 			resolvers[data.id].resolve(data.result);
 			delete resolvers[data.id];
 		});

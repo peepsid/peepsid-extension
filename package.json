@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack --progress --watch",
-    "build": "webpack",
+    "start": "set SCATTER_ENV=development&& webpack --progress --watch",
+    "build": "set SCATTER_ENV=production&& webpack",
     "walletpack": "yarn add @walletpack/core @walletpack/eosio @walletpack/bitcoin @walletpack/tron @walletpack/ethereum"
   },
   "author": "",
@@ -22,11 +22,11 @@
     "zip-webpack-plugin": "^3.0.0"
   },
   "dependencies": {
-    "@walletpack/bitcoin": "^1.0.29",
-    "@walletpack/core": "^1.0.26",
-    "@walletpack/eosio": "^0.0.31",
-    "@walletpack/ethereum": "^0.0.29",
-    "@walletpack/tron": "^0.0.29",
+    "@walletpack/bitcoin": "^1.0.36",
+    "@walletpack/core": "^1.0.33",
+    "@walletpack/eosio": "^0.0.42",
+    "@walletpack/ethereum": "^0.0.39",
+    "@walletpack/tron": "^0.0.42",
     "aes-oop": "^1.0.4",
     "bip39": "2.6.0",
     "create-hash": "^1.2.0",

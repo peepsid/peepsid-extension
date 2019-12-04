@@ -1,3 +1,5 @@
+const {getHost, setHost} = require("./util/getHost");
+
 const {LocalStream} = require('extension-streams');
 const apis = require('./util/browserapis');
 const wallet = require('./services/wallet');
@@ -20,7 +22,7 @@ chrome.browserAction.onClicked.addListener(tab => {
 		chrome.tabs.remove(openTab);
 		openTab = null;
 	}
-	chrome.tabs.create({ url: process.env.WEB_HOST }, tab => {
+	chrome.tabs.create({ url: getHost() }, tab => {
 		openTab = tab.id;
 	});
 });
@@ -58,8 +60,11 @@ const injectable = {
 	/**        FILES / STORAGE         **/
 	/************************************/
 	storage:{
-		getUIType:storage.getUIType,
-		setUIType:storage.setUIType,
+		getGeneralSetting:storage.getGeneralSetting,
+		setGeneralSetting:storage.setGeneralSetting,
+		setSimpleMode:storage.setSimpleMode,
+		setLanguage:storage.setLanguage,
+		getLanguage:storage.getLanguage,
 
 		setWalletData:wallet.updateScatter,
 		getWalletData:wallet.getScatter,
@@ -89,7 +94,7 @@ const injectable = {
 	utility:{
 		openTools:(windowId = null) => console.log(`Can't open tools from an extension!`),
 		closeWindow:() => {
-			chrome.tabs.remove(openTab);
+			// chrome.tabs.remove(openTab);
 			return true;
 		},
 		flashWindow:() => console.error('flashing not implemented'),
@@ -166,21 +171,25 @@ export default class Background {
 
 		chrome.runtime.onConnect.addListener(wallet_port => {
 			if(wallet_port.name !== 'wallet') return;
+
+			const host = wallet_port.sender.url.split('.com')[0] + '.com';
+			if(!['https://embed.get-scatter.com', 'https://bridge.get-scatter.com'].includes(host)) return;
+			setHost(host);
+
+
 			openTab = wallet_port.sender.tab.id;
 
 			let resolvers = {};
 
 			forwardApiRequest = x => {
 				return new Promise(resolve => {
-					resolvers[x.id] = resolve;
+					if(x && x.hasOwnProperty('id')) resolvers[x.id] = resolve;
 					wallet_port.postMessage(x);
 				});
 
 			};
 
-			console.log('connected to port', wallet_port);
 			wallet_port.onMessage.addListener(msg => {
-				console.log('got bg port msg', msg);
 				resolvers[msg.id](msg);
 				delete resolvers[msg.id];
 			});
@@ -189,7 +198,7 @@ export default class Background {
 		let apiResulters = {};
 
 		LocalStream.watch(async (request, sendResponse) => {
-			console.log('request', request);
+			// console.log('request', request);
 
 			if(request.type === 'unlocked'){
 				sendResponse(injectable.unlocked());
@@ -203,9 +212,8 @@ export default class Background {
 			}
 
 			if(request.type === 'apiResponse'){
-				console.log('got api response', request, apiResulters);
 				apiResulters[request.result.id](request.result);
-				// sendResponse(await Background.handleApiRequest(request.payload));
+				sendResponse(await Background.handleApiRequest(request.payload));
 				return true;
 			}
 
@@ -217,7 +225,6 @@ export default class Background {
 			if(request.type === 'embedder') {
 
 				const activeTab = await new Promise(r => chrome.tabs.getCurrent(tab => r(tab)));
-				console.log('activeTab', activeTab);
 
 				sendResponse(await embedder.checkEmbed());
 				return true;
