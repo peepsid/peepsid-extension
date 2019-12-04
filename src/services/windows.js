@@ -22,7 +22,7 @@ class LowLevelWindowService {
 		let resolver;
 		const promise = new Promise(resolve => resolver = resolve);
 
-		const win = await this.getWindow(`${getHost()}/#/popout?extension=${popout.id}`, width, height);
+		const win = await this.getWindow(`${getHost()}#/popout?extension=${popout.id}`, width, height);
 
 		return {promise, resolver, win};
 	}

@@ -1,5 +1,6 @@
 import {EncryptedStream} from 'extension-streams';
 import IdGenerator from '@walletpack/core/util/IdGenerator';
+import {getHost} from "./util/getHost";
 
 let resolvers = {};
 class Inject {
@@ -56,6 +57,15 @@ class Inject {
 				return proxyGet(null, target, key);
 			},
 		});
+
+		const loadStyles = (tries = 0) => {
+			if(tries >= 20) return console.error('Could not load styles!');
+			if(typeof window.loadStyles === 'function'){
+				window.loadStyles(location.origin + '/');
+			}
+			else setTimeout(() => loadStyles(tries++), 100);
+		};
+		loadStyles();
 
 	}
 

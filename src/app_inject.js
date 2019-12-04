@@ -21,6 +21,8 @@ class Inject {
 		stream.sync('scatter', stream.key);
 
 
+
+
 		const proxyApi = (target, key) => {
 			if (key === 'then') return target.then.bind(target);
 			return (...params) => new Promise(async (resolve, reject) => {
@@ -31,13 +33,14 @@ class Inject {
 		};
 
 		window.wallet = new Proxy({}, {
-			get(target, key) { return proxyApi(target, key); },
-			set (target, key, value) {
+			get(target, key) {
+				return proxyApi(target, key);
+			},
+			set(target, key, value) {
 				target[key] = value;
 				return true;
 			}
 		});
-
 		document.dispatchEvent(new Event("walletLoaded"));
 
 	}

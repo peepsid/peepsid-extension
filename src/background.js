@@ -27,7 +27,6 @@ chrome.browserAction.onClicked.addListener(tab => {
 	});
 });
 
-console.log('background loaded')
 
 const popouts = {};
 const popoutPromises = {};
@@ -172,8 +171,13 @@ export default class Background {
 		chrome.runtime.onConnect.addListener(wallet_port => {
 			if(wallet_port.name !== 'wallet') return;
 
-			const host = wallet_port.sender.url.split('.com')[0] + '.com';
-			if(!['https://embed.get-scatter.com', 'https://bridge.get-scatter.com'].includes(host)) return;
+			let host = wallet_port.sender.url;
+			host = [
+				'http://localhost:8081/',
+				'https://embed.get-scatter.com/',
+				'https://bridge.get-scatter.com/'
+			].find(x => host.indexOf(x) === 0);
+			if(!host) return;
 			setHost(host);
 
 
