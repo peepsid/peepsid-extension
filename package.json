@@ -1,13 +1,13 @@
 {
-  "name": "scatter-extension",
+  "name": "peepsid-extension",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "set SCATTER_ENV=development&& webpack --progress --watch",
-    "build": "set SCATTER_ENV=production&& webpack",
-    "walletpack": "yarn add @walletpack/core @walletpack/eosio @walletpack/bitcoin @walletpack/tron @walletpack/ethereum"
+    "start": "set PEEPSID_ENV=development&& webpack --progress --watch",
+    "build": "set PEEPSID_ENV=production&& webpack",
+    "dwalletjs": "yarn add @dwalletjs/core @dwalletjs/arisen @dwalletjs/bitcoin @dwalletjs/tron @dwalletjs/ethereum"
   },
   "author": "",
   "license": "ISC",
@@ -22,17 +22,17 @@
     "zip-webpack-plugin": "^3.0.0"
   },
   "dependencies": {
-    "@walletpack/bitcoin": "^1.0.36",
-    "@walletpack/core": "^1.0.33",
-    "@walletpack/eosio": "^0.0.42",
-    "@walletpack/ethereum": "^0.0.39",
-    "@walletpack/tron": "^0.0.42",
+    "@dwalletjs/bitcoin": "^1.0.0",
+    "@dwalletjs/core": "^1.0.0",
+    "@dwalletjs/arisen": "^1.0.0",
+    "@dwalletjs/ethereum": "^1.0.0",
+    "@dwalletjs/tron": "^1.0.0",
     "aes-oop": "^1.0.4",
     "bip39": "2.6.0",
     "create-hash": "^1.2.0",
     "dotenv": "^8.1.0",
     "dotenv-webpack": "^1.7.0",
-    "eosjs-ecc": "^4.0.7",
+    "@arisensdk/ecc": "^1.0.0",
     "extension-streams": "^1.0.7",
     "scrypt-async": "^2.0.1"
   }
